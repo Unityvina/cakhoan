@@ -3,32 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chatbot - Trợ Lý Thông Minh</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>AI Chatbot - Lưu Chat Vào TXT</title>
+    <style>
+        /* === TOÀN BỘ CSS ĐÃ TÍCH HỢP === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow: hidden; position: relative;
+        }
+        #particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .container {
+            width: 90%; max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden; backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2); position: relative; z-index: 1;
+        }
+        header {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            padding: 20px; text-align: center; color: white;
+        }
+        header h1 { margin: 0; font-size: 2em; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); }
+        .chat-container {
+            padding: 20px; height: 500px; overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+        .message {
+            max-width: 80%; margin: 10px 0; padding: 15px;
+            border-radius: 15px; position: relative;
+            animation: fadeIn 0.5s ease; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .message:hover { transform: translateY(-5px); }
+        .user-message {
+            align-self: flex-end; background: #00f2fe; color: #000;
+            border-bottom-right-radius: 0;
+        }
+        .ai-message {
+            align-self: flex-start; background: rgba(255, 255, 255, 0.2); color: #fff;
+            border-bottom-left-radius: 0;
+        }
+        .ai-message::before {
+            content: 'AI'; position: absolute; top: -10px; left: 10px;
+            background: #4facfe; padding: 5px 10px; border-radius: 10px;
+            font-size: 0.8em; font-weight: bold;
+        }
+        .typing-indicator {
+            display: none; align-self: flex-start;
+            background: rgba(255, 255, 255, 0.2); padding: 15px;
+            border-radius: 15px; border-bottom-left-radius: 0;
+        }
+        .typing-indicator span {
+            display: inline-block; width: 10px; height: 10px;
+            background: #fff; border-radius: 50%; margin: 0 5px;
+            animation: typing 1.5s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .input-area {
+            display: flex; padding: 20px; background: rgba(0, 0, 0, 0.2);
+        }
+        input[type="text"] {
+            flex: 1; padding: 15px; border: none; border-radius: 50px;
+            background: rgba(255, 255, 255, 0.2); color: white; font-size: 1em;
+            outline: none; transition: 0.3s;
+        }
+        input[type="text"]::placeholder { color: rgba(255, 255, 255, 0.7); }
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
+        }
+        button {
+            margin-left: 10px; padding: 15px 20px; border: none;
+            background: #4facfe; color: white; border-radius: 50%;
+            cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: #00f2fe; transform: scale(1.1) rotate(360deg); }
+        #voiceBtn { background: #ff6b6b; }
+        #voiceBtn:hover { background: #ff8787; }
+        #downloadBtn {
+            background: #34c759; margin-left: 10px;
+        }
+        #downloadBtn:hover { background: #2bb853; }
+        .loading { display: none; color: #4facfe; font-style: italic; text-align: center; padding: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #themeToggle {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255, 255, 255, 0.2); border: none;
+            padding: 10px; border-radius: 50%; cursor: pointer;
+            font-size: 1.5em; z-index: 10;
+        }
+        body.dark { background: linear-gradient(135deg, #000428, #004e92); }
+        body.dark .container { background: rgba(0, 0, 0, 0.3); }
+        footer {
+            text-align: center; padding: 10px; font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
 </head>
 <body>
     <canvas id="particles"></canvas>
     <button id="themeToggle">🌙</button>
     <div class="container">
         <header>
-            <h1>AI Chatbot Thông Minh</h1>
-            <p>Hỏi tôi bất cứ điều gì! Giờ với hiệu ứng sống động hơn!</p>
+            <h1>AI Chatbot - Lưu Chat TXT</h1>
+            <p>Chat và tải lịch sử về máy!</p>
         </header>
         <div class="chat-container" id="chat">
-            <div class="ai-message">Xin chào! Tôi là AI trợ lý. Bạn cần giúp gì hôm nay?</div>
+            <div class="ai-message">Xin chào! Tôi là AI. Chat với tôi và nhấn 📥 để tải lịch sử!</div>
         </div>
         <div class="typing-indicator" id="typing">
             <span></span><span></span><span></span>
         </div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Nhập tin nhắn của bạn...">
+            <input type="text" id="userInput" placeholder="Nhập tin nhắn...">
             <button id="voiceBtn">🎤</button>
             <button id="sendBtn">➤</button>
+            <button id="downloadBtn" style="display:none;">📥</button>
         </div>
         <div class="loading" id="loading">AI đang suy nghĩ...</div>
-        <footer>© 2025 AI Site - Được nâng cấp với JS sống động!</footer>
+        <footer>© 2025 AI Chat - Lưu tự động vào TXT</footer>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // === LƯU TRỮ CHAT ===
+        let chatHistory = [];
+
+        function saveToHistory(role, text) {
+            const timestamp = new Date().toLocaleString('vi-VN');
+            const line = `[${timestamp}] ${role}: ${text}\n`;
+            chatHistory.push(line);
+        }
+
+        function downloadChat() {
+            if (chatHistory.length === 0) return;
+            const blob = new Blob(chatHistory, { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chat_history_${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // === PARTICLE BACKGROUND ===
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray = [];
+        const numberOfParticles = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 5 + 1;
+                this.speedX = Math.random() * 1.5 - 0.75;
+                this.speedY = Math.random() * 1.5 - 0.75;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(79, 172, 254, 0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach(p => { p.update(); p.draw(); });
+            for (let i = 0; i < particlesArray.length; i++) {
+                for (let j = i; j < particlesArray.length; j++) {
+                    const dx = particlesArray[i].x - particlesArray[j].x;
+                    const dy = particlesArray[i].y - particlesArray[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(79, 172, 254, ${1 - distance / 100})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+                        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // === CHAT LOGIC ===
+        const chatContainer = document.getElementById('chat');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const typing = document.getElementById('typing');
+
+        const aiResponses = [
+            "Tuyệt vời! Bạn đang làm chủ AI rồi đấy! 🚀",
+            "Câu hỏi hay! Tôi sẽ lưu lại để học hỏi thêm 🤖",
+            "Haha, bạn hài hước quá! 😄",
+            "Tôi đã lưu tin nhắn này vào lịch sử!",
+            "Bạn muốn tải file TXT không? Nhấn 📥 nhé!",
+            "AI đây! Sẵn sàng trả lời mọi lúc! ⚡"
+        ];
+
+        function addMessage(text, type) {
+            const message = document.createElement('div');
+            message.classList.add('message', type + '-message');
+            message.innerHTML = text;
+            chatContainer.appendChild(message);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Lưu vào lịch sử
+            saveToHistory(type === 'user' ? 'Bạn' : 'AI', text.replace(/<[^>]*>/g, '')); // Loại bỏ HTML
+            downloadBtn.style.display = 'block'; // Hiện nút tải
+        }
+
+        function getAIResponse() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const random = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+                    resolve(random);
+                }, 1500 + Math.random() * 1500);
+            });
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            userInput.value = '';
+            typing.style.display = 'flex';
+
+            const response = await getAIResponse();
+            typing.style.display = 'none';
+            addMessage(response, 'ai');
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        downloadBtn.addEventListener('click', downloadChat);
+
+        // === VOICE INPUT ===
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'vi-VN';
+
+            voiceBtn.addEventListener('click', () => {
+                recognition.start();
+                voiceBtn.textContent = '🎙️';
+            });
+
+            recognition.onresult = (event) => {
+                userInput.value = event.results[0][0].transcript;
+                voiceBtn.textContent = '🎤';
+                sendMessage();
+            };
+
+            recognition.onerror = () => {
+                voiceBtn.textContent = '🎤';
+                alert('Lỗi giọng nói!');
+            };
+
+            recognition.onend = () => voiceBtn.textContent = '🎤';
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        // === THEME TOGGLE ===
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+        });
+
+        // === CHÀO MỪNG ===
+        setTimeout(() => {
+            addMessage('Lịch sử chat sẽ được lưu tự động. Nhấn 📥 để tải file TXT!', 'ai');
+        }, 2000);
+    </script>
 </body>
 </html>
